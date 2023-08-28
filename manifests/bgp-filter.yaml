@@ -1,0 +1,13 @@
+---
+kind: BGPFilter
+apiVersion: projectcalico.org/v3
+metadata:
+  name: export-egress-ips
+spec:
+  exportV4:
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.0/29
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.8/29

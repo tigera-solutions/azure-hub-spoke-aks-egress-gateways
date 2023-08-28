@@ -1,0 +1,39 @@
+---
+
+
+---
+apiVersion: projectcalico.org/v3
+kind: IPPool
+metadata:
+  name: tenant0-pool
+spec:
+  cidr: 10.99.0.0/29
+  blockSize: 31
+  nodeSelector: "!all()"
+  vxlanMode: Never
+---
+apiVersion: operator.tigera.io/v1
+kind: EgressGateway
+metadata:
+  name: tenant0-egw
+  namespace: tenant0
+spec:
+  logSeverity: "Info"
+  replicas: 2
+  ipPools:
+  - name: tenant0-pool
+  template:
+    metadata:
+      labels:
+        tenant: tenant0
+    spec:
+      terminationGracePeriodSeconds: 0
+      nodeSelector:
+        kubernetes.io/os: linux
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            tenant: tenant0

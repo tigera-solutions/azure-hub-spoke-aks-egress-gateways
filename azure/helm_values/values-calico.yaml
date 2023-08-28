@@ -1,0 +1,11 @@
+installation:
+  kubernetesProvider: "AKS"
+  cni:
+    type: Calico
+    ipam:
+      type: Calico
+  calicoNetwork:
+    bgp: Enabled
+    ipPools:
+    - cidr: ${pod_cidr}
+      encapsulation: ${calico_encap}
