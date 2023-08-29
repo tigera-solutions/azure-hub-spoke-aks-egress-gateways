@@ -78,8 +78,13 @@ monitor                         True        False         False      49m
 
 ### Deploy Egress Gateways for Calico
 
+#### 1: Peer your AKS cluster to the Azure Route Server
+
 ```sh
-kubectl apply -f manifests
+kubectl apply -f manifests/bgp-route-reflector.yaml
+kubectl apply -f manifests/egw-tenants.yaml
+kubectl apply -f manifests/egw-policy.yaml
+kubectl apply -f manifests/bgp-filter.yaml
 ```
 
 OR
@@ -91,3 +96,14 @@ terraform apply
 ```
 
 Enter `yes` at command prompt to apply
+
+### Validate the Deployment and Review Results
+
+#### 1: Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster the Calico default ippool routes
+
+```sh
+az network routeserver peering list-learned-routes --resource-group hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-1
+az network routeserver peering list-learned-routes --resource-group hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
+```
+
+
