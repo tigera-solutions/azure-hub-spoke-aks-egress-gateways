@@ -102,12 +102,12 @@ module "hub_spoke_1_peering" {
 }
 
 module "firewall" {
-  source               = "../modules/firewall"
-  resource_group       = azurerm_resource_group.hub.name
-  location             = var.location
-  pip_name             = "hub-fw-ip"
-  fw_name              = "hub-fw"
-  subnet_id            = module.hub_network.subnet_ids["AzureFirewallSubnet"]
+  source         = "../modules/firewall"
+  resource_group = azurerm_resource_group.hub.name
+  location       = var.location
+  pip_name       = "hub-fw-ip"
+  fw_name        = "hub-fw"
+  subnet_id      = module.hub_network.subnet_ids["AzureFirewallSubnet"]
 }
 
 module "spoke_1_routetable" {
@@ -179,8 +179,6 @@ resource "azurerm_kubernetes_cluster" "spoke_1_aks" {
   depends_on = [module.spoke_1_routetable, module.firewall, module.hub_spoke_1_peering]
 }
 
-
-
 resource "azurerm_firewall_network_rule_collection" "spoke_1_apiserver_access" {
   name                = "spoke-1-apiserver-access"
   azure_firewall_name = "hub-fw"
@@ -199,10 +197,6 @@ resource "azurerm_firewall_network_rule_collection" "spoke_1_apiserver_access" {
 
   depends_on = [azurerm_kubernetes_cluster.spoke_1_aks]
 }
-
-################################################################################
-# Calico Resources
-################################################################################
 
 resource "helm_release" "calico" {
   name             = "calico"
