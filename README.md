@@ -99,7 +99,9 @@ Enter `yes` at command prompt to apply
 
 ### Validate the Deployment and Review Results
 
-#### 1: Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster the Calico default ippool routes
+Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster the Calico default ippool routes
+
+#### 1: Check the learned routes
 
 ```sh
 az network routeserver peering list-learned-routes --resource-group hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-1
