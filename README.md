@@ -1,10 +1,16 @@
 # Enabling Workload-Level Security for AKS with Azure Firewall and Calico Egress Gateway
 
-## Reference Architecture
+## Solution Overview
+
+In this repo, we'll develop a foundational reference architecture that aligns with the Azure Well-Architected Framework's best practices for network design, with a special emphasis on the hub-spoke network topology. Our goal is to address challenges in pinpointing the source of traffic as it exits the cluster and traverses an external firewall, using Egress Gateways for Calico.
+
+![infra](images/hubspoke.png)
 
 This diagram illustrates our hub-spoke network design and the specific Azure resources used in our reference architecture. Each Spoke VNET shares its Egress Gateway address prefixes with the Azure Route Server located in the Hub VNET, ensuring seamless integration with the Azure network. 
 
-![infra](images/hubspoke.png)
+![infra](images/egw-routing.png)
+
+Egress traffic from Kubernetes workloads can be directed through specific Egress Gateways (or none at all), guided by advanced Egress Gateway Policy settings. This configuration creates a distinct network identity suitable for Azure firewall rule settings.
 
 ## Prerequisites
 
