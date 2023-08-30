@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: tenant0
+  name: tenant0-egw
 ---
 apiVersion: projectcalico.org/v3
 kind: IPPool
@@ -18,7 +18,7 @@ apiVersion: operator.tigera.io/v1
 kind: EgressGateway
 metadata:
   name: tenant0-egw
-  namespace: tenant0
+  namespace: tenant0-egw
 spec:
   logSeverity: "Info"
   replicas: 2
@@ -27,7 +27,7 @@ spec:
   template:
     metadata:
       labels:
-        tenant: tenant0
+        tenant: tenant0-egw
     spec:
       terminationGracePeriodSeconds: 0
       nodeSelector:
@@ -38,12 +38,12 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            tenant: tenant0
+            tenant: tenant0-egw
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: tenant1
+  name: tenant1-egw
 ---
 apiVersion: projectcalico.org/v3
 kind: IPPool
@@ -59,7 +59,7 @@ apiVersion: operator.tigera.io/v1
 kind: EgressGateway
 metadata:
   name: tenant1-egw
-  namespace: tenant1
+  namespace: tenant1-egw
 spec:
   logSeverity: "Info"
   replicas: 2
@@ -68,7 +68,7 @@ spec:
   template:
     metadata:
       labels:
-        tenant: tenant1
+        tenant: tenant1-egw
     spec:
       terminationGracePeriodSeconds: 0
       nodeSelector:
@@ -79,4 +79,4 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            tenant: tenant1
+            tenant: tenant1-egw
