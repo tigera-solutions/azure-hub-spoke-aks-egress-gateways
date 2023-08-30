@@ -34,7 +34,7 @@ git clone git@github.com:tigera-solutions/azure-hub-spoke-aks-egress-gateways.gi
 
 Navigate to the 'azure' subdirectory and then deploy the infrastructure.
 
-If the names `demo-hub-network` and `demo-spoke-networks` are already taken, you might want to edit the [variables.tf](azure/variables.tf) file in Terraform to use custom names for your Hub and Spoke Azure Resource Groups.
+If the names `demo-hub-network` and `demo-spoke-networks` are already taken, you will want to edit the [variables.tf](azure/variables.tf) file in Terraform to use custom names for your Hub and Spoke Azure Resource Groups.
 
 ```sh
 cd azure
@@ -134,6 +134,11 @@ Set up a highly avaiable Calico Egress Gateway for Tenant0. All outgoing traffic
 ```sh
 kubectl apply -f - <<EOF
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant0-egw
+---
 apiVersion: projectcalico.org/v3
 kind: IPPool
 metadata:
@@ -148,7 +153,7 @@ apiVersion: operator.tigera.io/v1
 kind: EgressGateway
 metadata:
   name: tenant0-egw
-  namespace: tenant0
+  namespace: tenant0-egw
 spec:
   logSeverity: "Info"
   replicas: 2
@@ -157,7 +162,7 @@ spec:
   template:
     metadata:
       labels:
-        tenant: tenant0
+        tenant: tenant0-egw
     spec:
       terminationGracePeriodSeconds: 0
       nodeSelector:
@@ -168,7 +173,7 @@ spec:
         whenUnsatisfiable: DoNotSchedule
         labelSelector:
           matchLabels:
-            tenant: tenant0
+            tenant: tenant0-egw
 EOF
 ```
 
