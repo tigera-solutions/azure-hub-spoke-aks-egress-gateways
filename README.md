@@ -2,7 +2,7 @@
 
 ## Solution Overview
 
-In this repo, we'll develop a foundational reference architecture that aligns with the Azure Well-Architected Framework's best practices for network design, with a special emphasis on the [hub-spoke network topology](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/hub-spoke-network-topology). Our goal is to address challenges in pinpointing the source of traffic as it exits the cluster and traverses an external firewall, using Egress Gateways for Calico.
+In this repo, we'll develop a foundational reference architecture that aligns with the Azure Well-Architected Framework's [best practices](https://learn.microsoft.com/en-us/azure/architecture/guide/aks/aks-firewall) for network design, with a special emphasis on the [hub-spoke network topology](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/hub-spoke-network-topology). Our goal is to address challenges in pinpointing the source of traffic as it exits the cluster and traverses an external firewall, using Egress Gateways for Calico.
 
 ![infra](images/hubspoke.png)
 
