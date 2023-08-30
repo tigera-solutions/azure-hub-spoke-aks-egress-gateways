@@ -32,7 +32,9 @@ Make sure that you completed the prerequisites above and cloned the Terraform bl
 git clone git@github.com:tigera-solutions/azure-hub-spoke-aks-egress-gateways.git
 ```
 
-Change directory into the azure subdirectory and deploy the infrastructure
+Navigate to the 'azure' subdirectory and then deploy the infrastructure.
+
+If the names `demo-hub-network` and `demo-spoke-networks` are already taken, you might want to edit the [variables.tf](azure/variables.tf) file in Terraform to use custom names for your Hub and Spoke Azure Resource Groups.
 
 ```sh
 cd azure
