@@ -18,6 +18,8 @@ resource "azurerm_firewall" "fw" {
     subnet_id            = var.subnet_id
     public_ip_address_id = azurerm_public_ip.pip.id
   }
+
+  depends_on = [azurerm_log_analytics_workspace.fw_log_analytics]
 }
 
 resource "azurerm_log_analytics_workspace" "fw_log_analytics" {
