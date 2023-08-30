@@ -12,7 +12,11 @@ This diagram illustrates our hub-spoke network design and the specific Azure res
 
 Egress traffic from Kubernetes workloads can be directed through specific Egress Gateways (or none at all), guided by advanced Egress Gateway Policy settings. This configuration creates a distinct network identity suitable for Azure firewall rule settings.
 
-## Prerequisites
+## Walk Through
+
+We'll use Terraform, an infrastructure-as-code tool, to deploy this reference architecture automatically. We'll walk you through the deployment process and then demonstrate how to utilize Egress Gateways with Calico.
+
+### Prerequisites
 
 First, ensure that you have installed the following tools locally.
 
@@ -20,9 +24,7 @@ First, ensure that you have installed the following tools locally.
 2. [kubectl](https://Kubernetes.io/docs/tasks/tools/)
 3. [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 
-### Checkout and deploy the Terraform blueprint
-
-#### 1: To provision this example:
+### Step 1: Checkout and deploy the Terraform blueprint
 
 Make sure that you completed the prerequisites above and cloned the Terraform blueprint by running the following command in a local directory:
 
@@ -30,7 +32,7 @@ Make sure that you completed the prerequisites above and cloned the Terraform bl
 git clone git@github.com:tigera-solutions/azure-hub-spoke-aks-egress-gateways.git
 ```
 
-#### 2: Change directory into the azure subdirectory and deploy the infrastructure
+Change directory into the azure subdirectory and deploy the infrastructure
 
 ```sh
 cd azure
@@ -38,16 +40,13 @@ terraform init
 terraform apply
 ```
 
-Enter `yes` at command prompt to apply
-
-
-#### 3: Update your kubeconfig with the AKS cluster credentials
+Update your kubeconfig with the AKS cluster credentials
 
 ```sh
 az aks get-credentials --name spoke1-aks --resource-group spoke-networks --context spoke1-aks
 ```
 
-#### 4: Verify that Calico is up and running in your AKS cluster
+Verify that Calico is up and running in your AKS cluster
 
 ```sh
 kubectl get tigerastatus
@@ -59,11 +58,11 @@ apiserver   True        False         False      9m30s
 calico      True        False         False      9m45s
 ```
 
-### Link your AKS Cluster to Calico Cloud
+### Step 2: Link your AKS Cluster to Calico Cloud
 
-#### 1: Join the AKS cluster to Calico Cloud
+Join the AKS cluster to Calico Cloud
 
-#### 2: Verify your AKS cluster is linked to Calico Cloud
+Verify your AKS cluster is linked to Calico Cloud
 
 ```sh
 kubectl get tigerastatus
@@ -82,36 +81,197 @@ management-cluster-connection   True        False         False      49m
 monitor                         True        False         False      49m
 ```
 
-### Deploy Egress Gateways for Calico
+### Step 3: Enterprise-grade Egress Gateways for the Azure Kubernetes Service
 
-#### 1: Peer your AKS cluster to the Azure Route Server
-
+Connect your AKS cluster to the Azure Route Server. Use the first two nodes in the AKS cluster as BGP route reflectors to manage and limit the number of peer connections effectively. 
 ```sh
-kubectl apply -f manifests/bgp-route-reflector.yaml
-kubectl apply -f manifests/egw-tenants.yaml
-kubectl apply -f manifests/egw-policy.yaml
-kubectl apply -f manifests/bgp-filter.yaml
+kubectl apply -f - <<EOF
+apiVersion: projectcalico.org/v3
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  logSeverityScreen: Info
+  nodeToNodeMeshEnabled: false
+  asNumber: 63400
+---
+kind: BGPPeer
+apiVersion: projectcalico.org/v3
+metadata:
+  name: peer-with-route-reflectors
+spec:
+  nodeSelector: all()
+  peerSelector: route-reflector == 'true'
+---
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: azure-route-server-a
+spec:
+  peerIP: 10.0.1.4
+  reachableBy: 10.1.0.1
+  asNumber: 65515
+  keepOriginalNextHop: true
+  nodeSelector: route-reflector == 'true'
+---
+apiVersion: projectcalico.org/v3
+kind: BGPPeer
+metadata:
+  name: azure-route-server-b
+spec:
+  peerIP: 10.0.1.5
+  reachableBy: 10.1.0.1
+  asNumber: 65515
+  keepOriginalNextHop: true
+  nodeSelector: route-reflector == 'true'
+EOF
 ```
 
-OR
+Set up a highly avaiable Calico Egress Gateway for Tenant0. All outgoing traffic from Tenant0 in the AKS cluster will have a source IP address in the range of 10.99.0.0/29. This information will be used to configure the Azure Firewall.
 
 ```sh
-cd egw
-terraform init
-terraform apply
+kubectl apply -f - <<EOF
+---
+apiVersion: projectcalico.org/v3
+kind: IPPool
+metadata:
+  name: tenant0-pool
+spec:
+  cidr: 10.99.0.0/29
+  blockSize: 31
+  nodeSelector: "!all()"
+  vxlanMode: Never
+---
+apiVersion: operator.tigera.io/v1
+kind: EgressGateway
+metadata:
+  name: tenant0-egw
+  namespace: tenant0
+spec:
+  logSeverity: "Info"
+  replicas: 2
+  ipPools:
+  - name: tenant0-pool
+  template:
+    metadata:
+      labels:
+        tenant: tenant0
+    spec:
+      terminationGracePeriodSeconds: 0
+      nodeSelector:
+        kubernetes.io/os: linux
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            tenant: tenant0
+EOF
 ```
-
-Enter `yes` at command prompt to apply
 
 ### Validate the Deployment and Review Results
 
-Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster the Calico default ippool routes
-
-#### 1: Check the learned routes
+Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster.
 
 ```sh
 az network routeserver peering list-learned-routes --resource-group hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-1
+
 az network routeserver peering list-learned-routes --resource-group hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
 ```
 
+Each node in the cluster should have a /26 block from the default pod IP poo and /31 routes for each Calico Egress Gateway pod.
 
+Turn off BGP advertisement for the default Calico IPPool and validate the default pod IP routes are no longer being learned by the Azure Route Server peers.
+
+```sh
+kubectl patch ippool default-ipv4-ippool --type='merge' -p '{"spec":{"disableBGPExport": true}}'
+```
+
+```
+{
+  "RouteServiceRole_IN_0": [
+    {
+      "asPath": "63400",
+      "localAddress": "10.0.1.5",
+      "network": "10.99.0.6/31",
+      "nextHop": "10.1.0.4",
+      "origin": "EBgp",
+      "sourcePeer": "10.1.0.4",
+      "weight": 32768
+    },
+    {
+      "asPath": "63400",
+      "localAddress": "10.0.1.5",
+      "network": "10.99.0.4/31",
+      "nextHop": "10.1.0.5",
+      "origin": "EBgp",
+      "sourcePeer": "10.1.0.4",
+      "weight": 32768
+    }
+  ],
+  "RouteServiceRole_IN_1": [
+    {
+      "asPath": "63400",
+      "localAddress": "10.0.1.4",
+      "network": "10.99.0.6/31",
+      "nextHop": "10.1.0.4",
+      "origin": "EBgp",
+      "sourcePeer": "10.1.0.4",
+      "weight": 32768
+    },
+    {
+      "asPath": "63400",
+      "localAddress": "10.0.1.4",
+      "network": "10.99.0.4/31",
+      "nextHop": "10.1.0.5",
+      "origin": "EBgp",
+      "sourcePeer": "10.1.0.4",
+      "weight": 32768
+    }
+  ]
+}
+```
+
+Deploy egress gateway policy
+
+```sh
+kubectl apply -f - <<EOF
+apiVersion: projectcalico.org/v3
+kind: EgressGatewayPolicy
+metadata:
+  name: "egw-policy"
+spec:
+  rules:
+  - destination:
+      cidr: 10.0.0.0/8
+    description: "Local: no gateway"
+  - destination:
+      cidr: 10.99.0.0/29
+    description: "Tenant0 Egress Gateway"
+    gateway:
+      namespaceSelector: "projectcalico.org/name == 'default'"
+      selector: "k8s-app == 'tenant0-egw'"
+EOF
+```
+
+Deploy egress gateway filter
+
+```sh
+kubectl apply -f - <<EOF
+kind: BGPFilter
+apiVersion: projectcalico.org/v3
+metadata:
+  name: export-egress-ips
+spec:
+  exportV4:
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.0/29
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.8/29
+EOF
+```
+
+### Cleanup
