@@ -185,73 +185,14 @@ Validate that the Azure Route Server peers are learning routes from the Azure Ku
 
 ```sh
 az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-1
+```
+
+```sh
 az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
 ```
 
 Each node in the cluster should have a /26 block from the default pod IP poo and /31 routes for each Calico Egress Gateway pod.
 
-```sh
-{
-  "RouteServiceRole_IN_0": [
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.5",
-      "network": "10.244.0.128/26",
-      "nextHop": "10.1.0.5",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    },
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.5",
-      "network": "10.244.0.64/26",
-      "nextHop": "10.1.0.4",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    },
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.5",
-      "network": "10.99.0.2/31",
-      "nextHop": "10.1.0.4",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    }
-  ],
-  "RouteServiceRole_IN_1": [
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.4",
-      "network": "10.244.0.64/26",
-      "nextHop": "10.1.0.4",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    },
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.4",
-      "network": "10.244.0.128/26",
-      "nextHop": "10.1.0.5",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    },
-    {
-      "asPath": "63400",
-      "localAddress": "10.0.1.4",
-      "network": "10.99.0.2/31",
-      "nextHop": "10.1.0.4",
-      "origin": "EBgp",
-      "sourcePeer": "10.1.0.4",
-      "weight": 32768
-    }
-  ]
-}
-```
 
 Turn off BGP advertisement for the default Calico IPPool and validate the default pod IP routes are no longer being learned by the Azure Route Server peers.
 
@@ -259,7 +200,9 @@ Turn off BGP advertisement for the default Calico IPPool and validate the defaul
 kubectl patch ippool default-ipv4-ippool --type='merge' -p '{"spec":{"disableBGPExport": true}}'
 ```
 
-```
+In a short while, you should see only the route announcements for the Egress Gateway.
+
+```sh
 {
   "RouteServiceRole_IN_0": [
     {
@@ -286,9 +229,26 @@ kubectl patch ippool default-ipv4-ippool --type='merge' -p '{"spec":{"disableBGP
 }
 ```
 
+You can also manage the number of route announcements for Egress Gateway CIDRs by using Calico BGP Filters.
 
+```sh
+kubectl apply -f - <<EOF
+kind: BGPFilter
+apiVersion: projectcalico.org/v3
+metadata:
+  name: export-egress-ips
+spec:
+  exportV4:
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.0/29
+    - action: Reject
+      matchOperator: NotIn
+      cidr: 10.99.0.8/29
+EOF
+```
 
-
+WIP
 
 Deploy egress gateway policy
 
@@ -309,25 +269,6 @@ spec:
     gateway:
       namespaceSelector: "projectcalico.org/name == 'default'"
       selector: "k8s-app == 'tenant0-egw'"
-EOF
-```
-
-Deploy egress gateway filter
-
-```sh
-kubectl apply -f - <<EOF
-kind: BGPFilter
-apiVersion: projectcalico.org/v3
-metadata:
-  name: export-egress-ips
-spec:
-  exportV4:
-    - action: Reject
-      matchOperator: NotIn
-      cidr: 10.99.0.0/29
-    - action: Reject
-      matchOperator: NotIn
-      cidr: 10.99.0.8/29
 EOF
 ```
 
