@@ -64,6 +64,8 @@ calico      True        False         False      9m45s
 
 Join the AKS cluster to Calico Cloud
 
+![infra](images/cc-join.gif)
+
 Verify your AKS cluster is linked to Calico Cloud
 
 ```sh
