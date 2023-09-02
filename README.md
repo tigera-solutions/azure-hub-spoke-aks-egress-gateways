@@ -4,11 +4,15 @@
 
 In this repo, we'll develop a foundational reference architecture that aligns with the Azure Well-Architected Framework's [best practices](https://learn.microsoft.com/en-us/azure/architecture/guide/aks/aks-firewall) for network design, with a special emphasis on the [hub-spoke network topology](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/hub-spoke-network-topology). Our goal is to address challenges in pinpointing the source of traffic as it exits the cluster and traverses an external firewall, using [Egress Gateways for Calico](https://docs.tigera.io/calico-enterprise/latest/networking/egress/egress-gateway-azure).
 
+
 ![infra](images/hubspoke.png)
+
 
 This diagram illustrates our hub-spoke network design and the specific Azure resources used in our reference architecture. Each Spoke VNET shares its Egress Gateway address prefixes with the Azure Route Server located in the Hub VNET, ensuring seamless integration with the Azure network. 
 
+
 ![infra](images/egw-routing.png)
+
 
 Egress traffic from Kubernetes workloads can be directed through specific Egress Gateways (or none at all), guided by advanced [Egress Gateway Policy](https://docs.tigera.io/calico-enterprise/latest/networking/egress/egress-gateway-azure#configure-a-namespace-or-pod-to-use-an-egress-gateway-egress-gateway-policy-method) settings. This configuration creates a distinct network identity suitable for Azure firewall rule settings.
 
@@ -191,7 +195,7 @@ az network routeserver peering list-learned-routes --resource-group demo-hub-net
 az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
 ```
 
-Each node in the cluster should have a /26 block from the default pod IP poo and /31 routes for each Calico Egress Gateway pod.
+Each node in the cluster should have a `/26` block from the default pod IP poo and `/31` routes for each Calico Egress Gateway pod.
 
 
 Turn off BGP advertisement for the default Calico IPPool and validate the default pod IP routes are no longer being learned by the Azure Route Server peers.
