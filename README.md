@@ -195,7 +195,7 @@ az network routeserver peering list-learned-routes \
   --name spoke-rs-bgpconnection-peer-2
 ```
 
-Each node in the cluster should have a `/26` block from the default pod IP pool and `/31` routes for each Calico Egress Gateway pod.
+Each node in the cluster should have a `/26` block from the default pod IP pool and `/31` routes for each Calico Egress Gateway pods.
 
 
 Turn off BGP advertisement for the default Calico IPPool and validate the default pod IP routes are no longer being learned by the Azure Route Server peers.
@@ -233,7 +233,7 @@ In a short while, you should see only the route announcements for the Egress Gat
 }
 ```
 
-You can also manage the number of route announcements for Egress Gateway CIDRs by using Calico BGP Filters. The following BGPFilter allows the routing advertisements for our egress gateways. 
+You can control the number of route announcements for Egress Gateway CIDRs by employing Calico BGP filters. The BGPFilter provided below enables the routing advertisements specifically for our egress gateways.
 
 ```sh
 kubectl apply -f - <<EOF
@@ -255,7 +255,7 @@ Deploy a `netshoot` pod into the default namespace.
 kubectl apply -f manifests/netshoot.yaml
 ```
 
-Test to see if you can make an outbound http request to the `www.tigera.io` website.  These should fail with a message from the firewall letting you know the requests are not allowed by any existing firewall rules.
+Try making an outbound HTTP request to the `www.tigera.io` website to test the setup. If everything is configured correctly, you should receive a message from the firewall indicating that the request is blocked due to a lack of applicable firewall rules.
 
 ```
 kubectl exec -it -n default netshoot -- curl -v https://www.tigera.io
@@ -280,19 +280,21 @@ You should see a message similar to the following.
 Action: Deny. Reason: No rule matched. Proceeding with default action.
 ```
 
-Now let's enable Calico Egress Gateways and using 
+Let's go ahead and activate the Calico Egress Gateways for the cluster. We'll also specify that pods in the default namespace should use the tenant0-egw Egress Gateway.
 
 ```
 kubectl patch felixconfiguration default \
   --type='merge' -p '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
 ```
 
-Using Source based 
+Set up the `default` namespace to utilize the Egress Gateway located in the `tenant0-egw` namespace.
 
 ```
 kubectl annotate ns default \
   egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
 ```
+
+Traffic is now allowed through the Azure Firewall because the incoming requests originate from a specific, recognized CIDR range assigned to the Calico Egress Gateways.
 
 ```
 kubectl exec -it -n default netshoot -- curl -IL https://www.tigera.io
