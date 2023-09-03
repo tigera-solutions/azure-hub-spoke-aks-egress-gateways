@@ -328,8 +328,18 @@ Requests should now be allowed past the Azure Firewall.
 * Connection #0 to host www.tigera.io left intact
 ```
 
+Browse to the Azure Firewall in the hub resource group.  Choose Logs under the Monitoring settings.
+
 ![infra](images/azure-fw.gif)
 
 
 ### Cleanup
 
+To teardown and remove the resources created in this example:
+
+```sh
+cd azure
+terraform destroy --auto-approve
+```
+
+or delete the Azure Resource Groups
