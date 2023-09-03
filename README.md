@@ -32,7 +32,7 @@ Make sure that you completed the prerequisites above and cloned the Terraform bl
 git clone git@github.com:tigera-solutions/azure-hub-spoke-aks-egress-gateways.git
 ```
 
-Navigate to the 'azure' subdirectory and then deploy the infrastructure.
+Navigate to the `azure` subdirectory and then deploy the infrastructure.
 
 If the names `demo-hub-network` and `demo-spoke-networks` are already taken, you will want to edit the [variables.tf](azure/variables.tf) file in Terraform to use custom names for your Hub and Spoke Azure Resource Groups.
 
@@ -258,7 +258,7 @@ kubectl apply -f manifests/netshoot.yaml
 Try making an outbound HTTP request to the `www.tigera.io` website to test the setup. If everything is configured correctly, you should receive a message from the firewall indicating that the request is blocked due to a lack of applicable firewall rules.
 
 ```
-kubectl exec -it -n default netshoot -- curl -v https://www.tigera.io
+kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
 ```
 
 You should see a message similar to the following.
@@ -297,27 +297,8 @@ kubectl annotate ns default \
 Traffic is now allowed through the Azure Firewall because the incoming requests originate from a specific, recognized CIDR range assigned to the Calico Egress Gateways.
 
 ```
-kubectl exec -it -n default netshoot -- curl -IL https://www.tigera.io
-```
-
-```sh
-kubectl apply -f - <<EOF
-apiVersion: projectcalico.org/v3
-kind: EgressGatewayPolicy
-metadata:
-  name: "egw-policy"
-spec:
-  rules:
-  - destination:
-      cidr: 10.0.0.0/8
-    description: "Local: no gateway"
-  - destination:
-      cidr: 10.99.0.0/29
-    description: "Tenant0 Egress Gateway"
-    gateway:
-      namespaceSelector: "projectcalico.org/name == 'default'"
-      selector: "k8s-app == 'tenant0-egw'"
-EOF
+kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
 ```
 
 ### Cleanup
+
