@@ -11,11 +11,5 @@ spec:
       cidr: 10.99.0.0/29
     description: "Gateway to on prem (www.tigera.io)"
     gateway:
-      namespaceSelector: "projectcalico.org/name == 'tenant0'"
+      namespaceSelector: "projectcalico.org/name == 'tenant0-egw'"
       selector: "k8s-app == 'tenant0-egw'"
-  - destination:
-      cidr: 10.99.0.8/29
-    description: "Gateway to on prem (www.microsoft.com)"
-    gateway:
-      namespaceSelector: "projectcalico.org/name == 'tenant1'"
-      selector: "k8s-app == 'tenant1-egw'"

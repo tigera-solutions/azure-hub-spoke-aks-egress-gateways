@@ -229,7 +229,7 @@ In a short while, you should see only the route announcements for the Egress Gat
 }
 ```
 
-You can also manage the number of route announcements for Egress Gateway CIDRs by using Calico BGP Filters.
+You can also manage the number of route announcements for Egress Gateway CIDRs by using Calico BGP Filters. The following BGPFilter allows the routing advertisements for our egress gateways. 
 
 ```sh
 kubectl apply -f - <<EOF
@@ -242,15 +242,32 @@ spec:
     - action: Reject
       matchOperator: NotIn
       cidr: 10.99.0.0/29
-    - action: Reject
-      matchOperator: NotIn
-      cidr: 10.99.0.8/29
 EOF
 ```
 
-WIP
+Deploy a `netshoot` pod into the default namespace.
 
-Deploy egress gateway policy
+```
+kubectl apply -f manifests/netshoot.yaml
+```
+
+Test to see if you can make outbound http or https requests past the Azure Firewall to the Tigera.io website.  These should fail with a message from the firewall letting you know they don't match any rules.
+
+```
+kubectl exec -it -n default netshoot -- curl -IL https://www.tigera.io
+```
+
+```
+kubectl patch felixconfiguration default --type='merge' -p     '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+```
+
+```
+kubectl annotate ns default egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
+```
+
+```
+kubectl exec -it -n default netshoot -- curl -IL https://www.tigera.io
+```
 
 ```sh
 kubectl apply -f - <<EOF

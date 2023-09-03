@@ -198,6 +198,36 @@ resource "azurerm_firewall_network_rule_collection" "spoke_1_apiserver_access" {
   depends_on = [azurerm_kubernetes_cluster.spoke_1_aks]
 }
 
+resource "azurerm_firewall_application_rule_collection" "tenant0_allowed_access" {
+  name                = "tenant0-allowed-access"
+  azure_firewall_name = "hub-fw"
+  resource_group_name = azurerm_resource_group.hub.name
+  priority            = 110
+  action              = "Allow"
+
+  rule {
+    name             = "allow access to tenant0 egress gateway"
+    description      = "allow access to tenant0 egress gateway"
+    source_addresses = ["10.99.0.0/29"]
+
+    target_fqdns = [
+      "www.tigera.io",
+    ]
+
+    protocol {
+      port = "80"
+      type = "Http"
+    }
+
+    protocol {
+      port = "443"
+      type = "Https"
+    }
+  }
+
+  depends_on = [azurerm_kubernetes_cluster.spoke_1_aks]
+}
+
 resource "helm_release" "calico" {
   name             = "calico"
   chart            = "tigera-operator"
