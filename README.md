@@ -256,7 +256,7 @@ cd ..
 kubectl apply -f manifests/netshoot.yaml
 ```
 
-Try making an outbound HTTP request to the `www.tigera.io` website to test the setup. If everything is configured correctly, you should receive a message from the firewall indicating that the request is blocked due to a lack of applicable firewall rules.
+Try making an outbound HTTP request to the [www.tigera.io](http://www.tigera.io) website to test the setup. If everything is configured correctly, you should receive a message from the firewall indicating that the request is blocked due to a lack of applicable firewall rules.
 
 ```
 kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
@@ -301,34 +301,7 @@ Traffic is now allowed through the Azure Firewall because the incoming requests 
 kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
 ```
 
-Requests should now be allowed past the Azure Firewall.
-
-```
-*   Trying 178.128.166.225:80...
-* Connected to www.tigera.io (178.128.166.225) port 80 (#0)
-> GET / HTTP/1.1
-> Host: www.tigera.io
-> User-Agent: curl/8.0.1
-> Accept: */*
->
-< HTTP/1.1 301 Moved Permanently
-< Content-Length: 162
-< Content-Type: text/html
-< Date: Sun, 03 Sep 2023 15:54:43 GMT
-< Location: https://www.tigera.io/
-< Server: nginx
-<
-<html>
-<head><title>301 Moved Permanently</title></head>
-<body>
-<center><h1>301 Moved Permanently</h1></center>
-<hr><center>nginx</center>
-</body>
-</html>
-* Connection #0 to host www.tigera.io left intact
-```
-
-Browse to the Azure Firewall in the hub resource group.  Choose Logs under the Monitoring settings.
+You should now be able to get requests through the Azure Firewall. To verify, go to the Azure Firewall located in the hub resource group and select "Logs" under the Monitoring settings. Filter the Application log data to display the last 30 minutes. Look for entries showing that traffic originating from the 10.99.0.0/29 IP range has been successfully allowed to pass outbound through the Azure Firewall to [www.tigera.io](http://www.tigera.io).
 
 ![infra](images/azure-fw.gif)
 
