@@ -283,7 +283,8 @@ Action: Deny. Reason: No rule matched. Proceeding with default action.
 Now let's enable Calico Egress Gateways and using 
 
 ```
-kubectl patch felixconfiguration default --type='merge' -p '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+kubectl patch felixconfiguration default \
+  --type='merge' -p '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
 ```
 
 Using Source based 
