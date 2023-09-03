@@ -290,7 +290,8 @@ kubectl patch felixconfiguration default \
 Using Source based 
 
 ```
-kubectl annotate ns default egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
+kubectl annotate ns default \
+  egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
 ```
 
 ```
