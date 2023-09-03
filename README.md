@@ -184,11 +184,15 @@ EOF
 Validate that the Azure Route Server peers are learning routes from the Azure Kubernetes Services cluster.
 
 ```sh
-az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-1
+az network routeserver peering list-learned-routes \
+  --resource-group demo-hub-network --routeserver hub-rs \
+  --name spoke-rs-bgpconnection-peer-1
 ```
 
 ```sh
-az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
+az network routeserver peering list-learned-routes \
+  --resource-group demo-hub-network --routeserver hub-rs \
+  --name spoke-rs-bgpconnection-peer-2
 ```
 
 Each node in the cluster should have a `/26` block from the default pod IP pool and `/31` routes for each Calico Egress Gateway pod.
@@ -251,15 +255,38 @@ Deploy a `netshoot` pod into the default namespace.
 kubectl apply -f manifests/netshoot.yaml
 ```
 
-Test to see if you can make outbound http or https requests past the Azure Firewall to the Tigera.io website.  These should fail with a message from the firewall letting you know they don't match any rules.
+Test to see if you can make an outbound http request to the `www.tigera.io` website.  These should fail with a message from the firewall letting you know the requests are not allowed by any existing firewall rules.
 
 ```
-kubectl exec -it -n default netshoot -- curl -IL https://www.tigera.io
+kubectl exec -it -n default netshoot -- curl -v https://www.tigera.io
 ```
 
+You should see a message similar to the following.
+
 ```
-kubectl patch felixconfiguration default --type='merge' -p     '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+*   Trying 178.128.166.225:80...
+* Connected to www.tigera.io (178.128.166.225) port 80 (#0)
+> GET / HTTP/1.1
+> Host: www.tigera.io
+> User-Agent: curl/8.0.1
+> Accept: */*
+>
+< HTTP/1.1 470 status code 470
+< Date: Sun, 03 Sep 2023 12:27:41 GMT
+< Content-Length: 70
+< Content-Type: text/plain; charset=utf-8
+<
+* Connection #0 to host www.tigera.io left intact
+Action: Deny. Reason: No rule matched. Proceeding with default action.
 ```
+
+Now let's enable Calico Egress Gateways and using 
+
+```
+kubectl patch felixconfiguration default --type='merge' -p '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+```
+
+Using Source based 
 
 ```
 kubectl annotate ns default egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
