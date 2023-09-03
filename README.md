@@ -249,9 +249,10 @@ spec:
 EOF
 ```
 
-Deploy a `netshoot` pod into the default namespace.
+Deploy a `netshoot` pod into the default namespace. Before executing the `kubectl` command, ensure that you are in the root directory of the project. 
 
 ```
+cd ..
 kubectl apply -f manifests/netshoot.yaml
 ```
 
@@ -294,11 +295,40 @@ kubectl annotate ns default \
   egress.projectcalico.org/namespaceSelector="projectcalico.org/name == 'tenant0-egw'"
 ```
 
-Traffic is now allowed through the Azure Firewall because the incoming requests originate from a specific, recognized CIDR range assigned to the Calico Egress Gateways.
+Traffic is now allowed through the Azure Firewall because the incoming requests originate from a specific, recognized CIDR range assigned to the `tenant0` Calico Egress Gateways.
 
 ```
 kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
 ```
+
+Requests should now be allowed past the Azure Firewall.
+
+```
+*   Trying 178.128.166.225:80...
+* Connected to www.tigera.io (178.128.166.225) port 80 (#0)
+> GET / HTTP/1.1
+> Host: www.tigera.io
+> User-Agent: curl/8.0.1
+> Accept: */*
+>
+< HTTP/1.1 301 Moved Permanently
+< Content-Length: 162
+< Content-Type: text/html
+< Date: Sun, 03 Sep 2023 15:54:43 GMT
+< Location: https://www.tigera.io/
+< Server: nginx
+<
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+* Connection #0 to host www.tigera.io left intact
+```
+
+
 
 ### Cleanup
 
