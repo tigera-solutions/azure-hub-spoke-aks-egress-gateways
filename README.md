@@ -191,7 +191,7 @@ az network routeserver peering list-learned-routes --resource-group demo-hub-net
 az network routeserver peering list-learned-routes --resource-group demo-hub-network --routeserver hub-rs --name spoke-rs-bgpconnection-peer-2
 ```
 
-Each node in the cluster should have a `/26` block from the default pod IP poo and `/31` routes for each Calico Egress Gateway pod.
+Each node in the cluster should have a `/26` block from the default pod IP pool and `/31` routes for each Calico Egress Gateway pod.
 
 
 Turn off BGP advertisement for the default Calico IPPool and validate the default pod IP routes are no longer being learned by the Azure Route Server peers.
