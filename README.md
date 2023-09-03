@@ -328,6 +328,7 @@ Requests should now be allowed past the Azure Firewall.
 * Connection #0 to host www.tigera.io left intact
 ```
 
+![infra](images/azure-fw.gif)
 
 
 ### Cleanup
