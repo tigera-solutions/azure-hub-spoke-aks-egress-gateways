@@ -343,3 +343,9 @@ terraform destroy --auto-approve
 ```
 
 or delete the Azure Resource Groups
+
+```sh
+az group delete --resource-group demo-hub-network --no-wait
+az group delete --resource-group demo-spoke-networks --no-wait
+```
+
