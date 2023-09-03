@@ -262,7 +262,7 @@ Try making an outbound HTTP request to the `www.tigera.io` website to test the s
 kubectl exec -it -n default netshoot -- curl -v http://www.tigera.io
 ```
 
-You should see a message similar to the following.
+You should see a message similar to the following. The request should be denied by the Azure Firewall.
 
 ```
 *   Trying 178.128.166.225:80...
