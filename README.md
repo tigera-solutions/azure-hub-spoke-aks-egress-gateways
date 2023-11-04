@@ -283,10 +283,16 @@ Action: Deny. Reason: No rule matched. Proceeding with default action.
 
 Let's go ahead and activate the Calico Egress Gateways for the cluster. We'll also specify that pods in the default namespace should use the tenant0-egw Egress Gateway.
 
+
 ```
-kubectl patch felixconfiguration default \
-  --type='merge' -p '{"spec":{"egressIPSupport":"EnabledPerNamespaceOrPerPod"}}'
+kubectl patch felixconfiguration default --type='merge' -p '{
+  "spec": {
+    "egressIPSupport": "EnabledPerNamespaceOrPerPod",
+    "flowLogsFlushInterval": "15s"
+  }
+}'
 ```
+
 
 Set up the `default` namespace to utilize the Egress Gateway located in the `tenant0-egw` namespace.
 
