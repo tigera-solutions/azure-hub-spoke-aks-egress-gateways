@@ -62,7 +62,7 @@ calico      True        False         False      9m45s
 
 ### Step 2: Link your AKS Cluster to Calico Cloud
 
-Join the AKS cluster to Calico Cloud
+Join your AKS cluster to [Calico Cloud](https://www.calicocloud.io/home) as illustrated:
 
 ![infra](images/cc-join.gif)
 
