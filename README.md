@@ -288,7 +288,8 @@ Let's go ahead and activate the Calico Egress Gateways for the cluster. We'll al
 kubectl patch felixconfiguration default --type='merge' -p '{
   "spec": {
     "egressIPSupport": "EnabledPerNamespaceOrPerPod",
-    "flowLogsFlushInterval": "15s"
+    "flowLogsFlushInterval": "15s",
+    "flowLogsFileAggregationKindForAllowed": 1
   }
 }'
 ```
